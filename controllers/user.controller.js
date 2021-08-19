@@ -107,16 +107,14 @@ const deleteUser = (req, res) => {
       return res.json({ status: false, message: err.message });
     });
 };
-const updateUserDetails = (req, res) => {
+const updateUserDetails = async (req, res) => {
   let { user } = req;
   const { update } = req.body;
   if (update._id) {
-    return res
-      .status(400)
-      .json({
-        status: false,
-        message: "Forbidden request, Id cannot be updated",
-      });
+    return res.status(400).json({
+      status: false,
+      message: "Forbidden request, Id cannot be updated",
+    });
   }
   user = { ...user, ...updated };
   user = await user.save();
