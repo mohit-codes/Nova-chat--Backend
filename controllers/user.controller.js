@@ -107,6 +107,7 @@ const deleteUser = (req, res) => {
       return res.json({ status: false, message: err.message });
     });
 };
+
 const updateUserDetails = async (req, res) => {
   let { user } = req;
   const { update } = req.body;
@@ -121,6 +122,31 @@ const updateUserDetails = async (req, res) => {
   return res.json({ status: true, message: "Details updated", user: user });
 };
 
+const saveMessage = async (req, res) => {
+  const { userId, message } = req.body;
+  const user = await User.findOne({ _id: userId }).catch((err) => {
+    return res.json({ status: false, message: err.message });
+  });
+  if (user) {
+    user.savedMessages.push(message);
+    await user.save();
+    return res.json({ status: true });
+  }
+};
+
+const deleteSavedMessage = async (req, res) => {
+  const { userId, message } = req.body;
+  const user = await User.findOne({ _id: userId }).catch((err) => {
+    return res.json({ status: false, message: err.message });
+  });
+  if (user) {
+    const index = user.savedMessages.findIndex(message);
+    user.savedMessages.splice(index, 1);
+    await user.save();
+    return res.json({ status: true });
+  }
+};
+
 module.exports = {
   login,
   signup,
@@ -128,4 +154,6 @@ module.exports = {
   getById,
   deleteUser,
   updateUserDetails,
+  saveMessage,
+  deleteSavedMessage,
 };
