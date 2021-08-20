@@ -64,7 +64,7 @@ const createGroupMessage = async (senderId, groupId, message) => {
   return info;
 };
 
-const startMessage = async (senderId, receiverEmail, message) => {
+const startMessage = async (senderId, receiverEmail) => {
   const user = await User.findOne({ _id: senderId });
   if (user) {
     const receiver = await User.findOne({ email: receiverEmail });
