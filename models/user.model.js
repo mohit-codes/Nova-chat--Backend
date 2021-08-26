@@ -19,7 +19,7 @@ const userSchema = new mongoose.Schema(
     },
     chats: [{ type: mongoose.Schema.Types.ObjectId }],
     groups: [{ type: mongoose.Schema.Types.ObjectId }],
-    savedMessages: [{ type: String }],
+    savedMessages: [],
   },
   { timestamps: true }
 );
