@@ -11,6 +11,13 @@ Backend using ExpressJS connected to MongoDB through Mongoose
 - PUT  /users/update/:userId - Update details of user (except id).
 - DELETE /users/:userId - delete user.
 - GET  /get_by_Id/:userId  - get single user by id.
+- POST /users/saveMessage - take userId and message to save it.
+- DELETE /users/delete_saved_message  - take userId and message to delete it from Saved Messages.
+- GET /users/get_by_Id/:userId - return user object.
+- GET /users/recipients/:userId - fetch Recipients by userId
+- GET /users/groups/:userId  - fetch Groups By userId.
+- PUT /users/update/:userId - update User Details.
+- DELETE /users/:userId - delete User
 
 <!-- ### Projects (Teams)
 
