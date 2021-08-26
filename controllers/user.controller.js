@@ -1,14 +1,16 @@
 const User = require("../models/user.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-
+const secret = process.env.JWT_SECRET;
+const Group = require("../models/group.model");
 const login = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email: email }).catch((err) => {
     console.log(err);
   });
+
   if (user) {
-    const isPasswordCorrect = await bcrypt.compare(user.password, password);
+    const isPasswordCorrect = await bcrypt.compare(password, user.password);
     if (isPasswordCorrect) {
       const token = jwt.sign({ id: user._id, name: user.name }, secret);
       return res.json({
@@ -107,22 +109,63 @@ const deleteUser = (req, res) => {
       return res.json({ status: false, message: err.message });
     });
 };
-const updateUserDetails = (req, res) => {
+
+const updateUserDetails = async (req, res) => {
   let { user } = req;
   const { update } = req.body;
   if (update._id) {
-    return res
-      .status(400)
-      .json({
-        status: false,
-        message: "Forbidden request, Id cannot be updated",
-      });
+    return res.status(400).json({
+      status: false,
+      message: "Forbidden request, Id cannot be updated",
+    });
   }
   user = { ...user, ...updated };
   user = await user.save();
   return res.json({ status: true, message: "Details updated", user: user });
 };
 
+const saveMessage = async (req, res) => {
+  const { userId, message } = req.body;
+
+  const user = await User.findOne({ _id: userId }).catch((err) => {
+    return res.json({ status: false, message: err.message });
+  });
+  if (user) {
+    user.savedMessages.push(message);
+    await user.save();
+    return res.json({ status: true });
+  }
+};
+
+const deleteSavedMessage = async (req, res) => {
+  const { userId, message } = req.body;
+  const user = await User.findOne({ _id: userId }).catch((err) => {
+    return res.json({ status: false, message: err.message });
+  });
+  if (user) {
+    const index = user.savedMessages.findIndex(message);
+    user.savedMessages.splice(index, 1);
+    await user.save();
+    return res.json({ status: true });
+  }
+};
+
+const fetchGroupsByIds = async (req, res) => {
+  const { user } = req;
+  const data = await Group.find({ _id: { $in: user.groups } }).catch((err) =>
+    console.log(err)
+  );
+  return res.status(200).json({ success: true, groups: data });
+};
+
+const fetchRecipientsByIds = async (req, res) => {
+  const { user } = req;
+  const data = await User.find(
+    { _id: { $in: user.chats } },
+    "_id name email"
+  ).catch((err) => console.log(err));
+  return res.status(200).json({ success: true, recipients: data });
+};
 module.exports = {
   login,
   signup,
@@ -130,4 +173,8 @@ module.exports = {
   getById,
   deleteUser,
   updateUserDetails,
+  saveMessage,
+  deleteSavedMessage,
+  fetchGroupsByIds,
+  fetchRecipientsByIds,
 };

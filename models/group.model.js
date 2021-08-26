@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const groupSchema = new mongoose.Schema(
   {
     admin: {
-      type: Schema.Types.ObjectId,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
     },
     code: {
