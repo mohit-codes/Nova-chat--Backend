@@ -12,22 +12,12 @@ const {
   createMessage,
   startMessage,
 } = require("./controllers/message.controller");
-const {
-  addUser,
-  addUserIntoGroup,
-  getUser,
-  groups,
-  removeUser,
-  users,
-} = require("./routers/onlineUsers");
-
 
 const app = express();
 app.use(express.json());
 app.use(cors());
 const server = http.createServer(app);
-const io = socketio(server,{cors:true});
-
+const io = socketio(server, { cors: true });
 
 // called before any route
 initializeDBConnection();
@@ -39,25 +29,35 @@ app.get("/", (req, res) => {
 app.use("/users", userRouter);
 app.use("/messages", userMessage);
 
+let usersConnected = new Map();
+
 io.on("connection", (socket) => {
-  console.log(users);
+  socket.on("connectUser", ({ name }) => {
+    //  When the client sends 'name', we store the 'name',
+    //  'socket.client.id', and 'socket.id in a Map structure
 
-  socket.on("disconnect", () => {
-    removeUser(socket.id);
+    usersConnected.set(name, [socket.client.id, socket.id]);
+
+    io.emit("onlineUsers", Array.from(usersConnected));
   });
 
-  socket.on("startMessage", (senderId, receiverEmail, senderEmail) => {
+  socket.on("disconnect", ({ name }) => {
+    usersConnected.delete(name);
+  });
+
+  socket.on("startMessage", ({ senderId, receiverEmail, senderEmail }) => {
     startMessage(senderId, receiverEmail);
-    addUser({ id: socket.id, email: senderEmail });
   });
 
-  socket.on("sendMessage", (senderId, receiverEmail, message) => {
-    createMessage(senderId, receiverEmail, message).then((res) => {
-      io.emit("message", res);
+  socket.on("sendMessage", ({ senderId, receiver, message }) => {
+    const { email, name } = receiver;
+    let socketId = usersConnected.get(name)[1];
+    createMessage(senderId, email, message).then((res) => {
+      io.to(socketId).emit("message", res);
     });
   });
 
-  socket.on("sendGroupMessage", (sender, group, message) => {
+  socket.on("sendGroupMessage", ({ sender, group, message }) => {
     createGroupMessage(sender, group._id, message).then((res) => {
       io.to(res.group.code).emit("groupMessage", res);
     });
@@ -65,7 +65,6 @@ io.on("connection", (socket) => {
 
   socket.on("joinGroup", ({ userInfo, group }) => {
     socket.join(group);
-    addUserIntoGroup({ userInfo, group });
   });
 });
 
