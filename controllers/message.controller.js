@@ -1,8 +1,10 @@
 const Group = require("../models/group.model");
 const Message = require("../models/message.model");
 const User = require("../models/user.model");
+
 const createMessage = async (senderId, receiverEmail, message) => {
   let info = null;
+  let isNewRecipient = false;
   const user = await User.findOne({ _id: senderId }).catch((err) => {
     console.log(err);
   });
@@ -10,6 +12,7 @@ const createMessage = async (senderId, receiverEmail, message) => {
     const receiver = await User.findOne({ email: receiverEmail });
     if (receiver) {
       if (!receiver.chats.includes(senderId)) {
+        isNewRecipient = true;
         receiver.chats.push(senderId);
         await receiver.save();
       }
@@ -31,7 +34,7 @@ const createMessage = async (senderId, receiverEmail, message) => {
       };
     }
   }
-  return info;
+  return { info, isNewRecipient };
 };
 
 const createGroupMessage = async (senderId, groupId, message) => {
