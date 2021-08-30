@@ -52,8 +52,12 @@ io.on("connection", (socket) => {
   socket.on("sendMessage", ({ senderId, receiver, message }) => {
     const { email, name } = receiver;
     let socketId = usersConnected.get(name)[1];
-    createMessage(senderId, email, message).then((res) => {
-      io.to(socketId).emit("message", res);
+    createMessage(senderId, email, message).then(({ info, isNewRecipient }) => {
+      if (isNewRecipient) {
+        io.to(socketId).emit("newRecipient", info);
+      } else {
+        io.to(socketId).emit("message", info);
+      }
     });
   });
 
