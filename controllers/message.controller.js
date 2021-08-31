@@ -30,6 +30,7 @@ const createMessage = async (senderId, receiverEmail, message) => {
           email: receiver.email,
         },
         message: message,
+        createdAt: message.createdAt,
         messageId: newMessage._id,
       };
     }
@@ -60,6 +61,7 @@ const createGroupMessage = async (senderId, groupId, message) => {
           _id: group._id,
         },
         message: message,
+        createdAt: message.createdAt,
         messageId: newMessage._id,
       };
     }
@@ -134,6 +136,7 @@ const getMessages = (req, res) => {
                           id: receiver._id,
                         },
                         message: message.message,
+                        createdAt: message.createdAt,
                         messageId: message._id,
                       };
                     } else {
@@ -148,6 +151,7 @@ const getMessages = (req, res) => {
                           email: receiver.email,
                           id: receiver._id,
                         },
+                        createdAt: message.createdAt,
                         message: message.message,
                         messageId: message._id,
                       };
