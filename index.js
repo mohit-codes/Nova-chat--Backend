@@ -49,16 +49,23 @@ io.on("connection", (socket) => {
     startMessage(senderId, receiverEmail);
   });
 
-  socket.on("sendMessage", ({ senderId, receiver, message }) => {
+  socket.on("sendMessage", ({ sender, receiver, message }) => {
     const { email, name } = receiver;
-    let socketId = usersConnected.get(name)[1];
-    createMessage(senderId, email, message).then(({ info, isNewRecipient }) => {
-      if (isNewRecipient) {
-        io.to(socketId).emit("newRecipient", info);
-      } else {
-        io.to(socketId).emit("message", info);
+    let receiverSocketId =
+      usersConnected.get(name) === undefined
+        ? false
+        : usersConnected.get(name)[1];
+    let senderSocketId = usersConnected.get(sender.name)[1];
+    createMessage(sender._id, email, message).then(
+      ({ info, isNewRecipient }) => {
+        if (isNewRecipient && receiverSocketId) {
+          io.to(receiverSocketId).emit("newRecipient", info);
+        } else if (receiverSocketId) {
+          io.to(receiverSocketId).emit("message", info);
+        }
+        io.to(senderSocketId).emit("message", info);
       }
-    });
+    );
   });
 
   socket.on("sendGroupMessage", ({ sender, group, message }) => {
