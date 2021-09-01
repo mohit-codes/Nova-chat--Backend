@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const secret = process.env.JWT_SECRET;
 const Group = require("../models/group.model");
+const { deleteMessages } = require("./message.controller");
+
 const login = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email: email }).catch((err) => {
@@ -184,7 +186,8 @@ const deleteRecipient = async (req, res) => {
   const user = await User.findOne({ _id: senderId }).catch((err) => {
     return res.json({ status: false, message: err.message });
   });
-  if (user) {
+  const isMessagesDeleted = deleteMessages(senderId, recipientId);
+  if (user && isMessagesDeleted) {
     const index = user.chats.indexOf(recipientId);
     user.chats.splice(index, 1);
     await user.save();
