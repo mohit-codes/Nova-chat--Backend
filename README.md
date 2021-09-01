@@ -1,4 +1,4 @@
-# Nova Chat Backend 
+# Nova Chat Backend  
 
 Backend using ExpressJS with Socket io connected to MongoDB through Mongoose
 
