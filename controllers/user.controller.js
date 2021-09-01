@@ -98,6 +98,17 @@ const getById = (req, res) => {
     .json({ status: true, user: user, message: "User found" });
 };
 
+const getByEmail = async (req, res) => {
+  const { email } = req.params;
+  const user = await User.findOne({ email: email }, "name _id email");
+  if (user) {
+    return res
+      .status(200)
+      .json({ status: true, user: user, message: "User found" });
+  }
+  return res.json({ status: false, user: null, message: "User not found" });
+};
+
 const deleteUser = (req, res) => {
   const { user } = req;
   user
@@ -143,7 +154,7 @@ const deleteSavedMessage = async (req, res) => {
     return res.json({ status: false, message: err.message });
   });
   if (user) {
-    const index = user.savedMessages.findIndex(message);
+    const index = user.savedMessages.indexOf(message);
     user.savedMessages.splice(index, 1);
     await user.save();
     return res.json({ status: true });
@@ -166,14 +177,32 @@ const fetchRecipientsByIds = async (req, res) => {
   ).catch((err) => console.log(err));
   return res.status(200).json({ success: true, recipients: data });
 };
+
+const deleteRecipient = async (req, res) => {
+  const { senderId, recipientId } = req.body;
+
+  const user = await User.findOne({ _id: senderId }).catch((err) => {
+    return res.json({ status: false, message: err.message });
+  });
+  if (user) {
+    const index = user.chats.indexOf(recipientId);
+    user.chats.splice(index, 1);
+    await user.save();
+    return res.json({ status: true });
+  }
+  return res.json({ status: false, message: "user not found" });
+};
+
 module.exports = {
   login,
   signup,
   findUser,
   getById,
+  getByEmail,
   deleteUser,
   updateUserDetails,
   saveMessage,
+  deleteRecipient,
   deleteSavedMessage,
   fetchGroupsByIds,
   fetchRecipientsByIds,

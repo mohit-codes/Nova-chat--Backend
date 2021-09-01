@@ -1,8 +1,10 @@
 const Group = require("../models/group.model");
 const Message = require("../models/message.model");
+const User = require("../models/user.model");
 
 const createMessage = async (senderId, receiverEmail, message) => {
   let info = null;
+  let isNewRecipient = false;
   const user = await User.findOne({ _id: senderId }).catch((err) => {
     console.log(err);
   });
@@ -10,6 +12,7 @@ const createMessage = async (senderId, receiverEmail, message) => {
     const receiver = await User.findOne({ email: receiverEmail });
     if (receiver) {
       if (!receiver.chats.includes(senderId)) {
+        isNewRecipient = true;
         receiver.chats.push(senderId);
         await receiver.save();
       }
@@ -20,18 +23,19 @@ const createMessage = async (senderId, receiverEmail, message) => {
       });
       await newMessage.save();
       info = {
-        sender: { name: user.name, email: user.email, id: user._id },
+        sender: { name: user.name, email: user.email, _id: user._id },
         receiver: {
           name: receiver.name,
-          id: receiver._id,
+          _id: receiver._id,
           email: receiver.email,
         },
         message: message,
+        createdAt: message.createdAt,
         messageId: newMessage._id,
       };
     }
   }
-  return info;
+  return { info, isNewRecipient };
 };
 
 const createGroupMessage = async (senderId, groupId, message) => {
@@ -49,14 +53,15 @@ const createGroupMessage = async (senderId, groupId, message) => {
       });
       await newMessage.save();
       info = {
-        sender: { name: user.name, email: user.email, id: user._id },
+        sender: { name: user.name, email: user.email, _id: user._id },
         receiver: {
           name: group.name,
           members: group.members,
           code: group.code,
-          id: group._id,
+          _id: group._id,
         },
         message: message,
+        createdAt: message.createdAt,
         messageId: newMessage._id,
       };
     }
@@ -112,7 +117,7 @@ const getMessages = (req, res) => {
                   let conversation = messagesSentBySender.concat(
                     messagesSentByReceiver
                   );
-                  result.sort((a, b) => {
+                  conversation.sort((a, b) => {
                     return new Date(a.createdAt) - new Date(b.createdAt);
                   });
                   let result = [];
@@ -131,6 +136,7 @@ const getMessages = (req, res) => {
                           id: receiver._id,
                         },
                         message: message.message,
+                        createdAt: message.createdAt,
                         messageId: message._id,
                       };
                     } else {
@@ -145,13 +151,14 @@ const getMessages = (req, res) => {
                           email: receiver.email,
                           id: receiver._id,
                         },
+                        createdAt: message.createdAt,
                         message: message.message,
                         messageId: message._id,
                       };
                     }
                     result.push(info);
                   });
-                  return res.json({ status: true, messages: messages });
+                  return res.json({ status: true, messages: result });
                 }
               );
             })
