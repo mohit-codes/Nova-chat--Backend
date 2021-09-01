@@ -172,6 +172,28 @@ const getMessages = (req, res) => {
   });
 };
 
+const deleteMessages = (senderId, receiverId) => {
+  Message.deleteMany({ sender: senderId, receiver: receiverId })
+    .then(() => {
+      const boolResult = Message.deleteMany({
+        receiver: senderId,
+        sender: receiverId,
+      })
+        .then(() => {
+          return true;
+        })
+        .catch((err) => {
+          console.log(err);
+          return false;
+        });
+      return boolResult;
+    })
+    .catch((err) => {
+      console.log(err);
+      return false;
+    });
+};
+
 // A mongoose query can be executed in one of two ways.
 // First, if you pass in a callback function, Mongoose will execute the query asynchronously and pass the
 // results to the callback.
@@ -215,6 +237,7 @@ module.exports = {
   getMessages,
   createGroupMessage,
   createMessage,
+  deleteMessages,
   getGroupMessages,
   startMessage,
 };
