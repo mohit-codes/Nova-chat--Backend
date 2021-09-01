@@ -45,7 +45,7 @@ io.on("connection", (socket) => {
     usersConnected.delete(name);
   });
 
-  socket.on("startMessage", ({ senderId, receiverEmail, senderEmail }) => {
+  socket.on("startMessage", ({ senderId, receiverEmail }) => {
     startMessage(senderId, receiverEmail);
   });
 
