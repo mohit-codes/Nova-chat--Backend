@@ -12,6 +12,9 @@ const {
   createMessage,
   startMessage,
 } = require("./controllers/message.controller");
+const authenticate = require("./middleware/authenticate");
+const errorHandler = require("./middleware/errorHandler");
+const routeHandler = require("./middleware/routeHandler");
 
 const app = express();
 app.use(express.json());
@@ -27,7 +30,10 @@ app.get("/", (req, res) => {
 });
 
 app.use("/users", userRouter);
-app.use("/messages", userMessage);
+app.use("/messages", authenticate, userMessage);
+
+app.use(routeHandler);
+app.use(errorHandler);
 
 let usersConnected = new Map();
 
