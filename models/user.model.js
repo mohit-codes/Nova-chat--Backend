@@ -17,8 +17,8 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
-    chats: [{ type: mongoose.Schema.Types.ObjectId }],
-    groups: [{ type: mongoose.Schema.Types.ObjectId }],
+    chats: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    groups: [{ type: mongoose.Schema.Types.ObjectId, ref: "Group" }],
     savedMessages: [],
   },
   { timestamps: true }
