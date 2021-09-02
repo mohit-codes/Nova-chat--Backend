@@ -4,16 +4,22 @@ const groupSchema = new mongoose.Schema(
   {
     admin: {
       type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
-    code: {
-      type: String,
+    description: mongoose.Schema.Types.String,
+    isPublic: mongoose.Schema.Types.Boolean,
+    groupCode: {
+      type: Number,
       required: true,
       unique: true,
     },
-    members: {
-      type: Array,
-    },
+    members: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
     name: {
       type: String,
       required: true,
