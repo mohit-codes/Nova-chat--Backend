@@ -1,18 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const {
-  create,
+  createGroup,
   addMember,
-  getByCode,
-  getById,
   removeMember,
   deleteGroup,
+  updateGroup,
 } = require("../controllers/group.controller");
 
-router.route("/create").post(create);
+router.route("/create").post(createGroup);
 router.route("/add_member").post(addMember);
-router.route("/get_by_code/:groupCode").get(getByCode);
-router.route("/get_by_id/:groupId").get(getById);
+router.route("/update_group").put(updateGroup);
 router.route("/remove_member").post(removeMember);
 router.route("/:groupId").delete(deleteGroup);
 
