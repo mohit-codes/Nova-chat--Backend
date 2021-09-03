@@ -6,7 +6,8 @@ const http = require("http");
 const socketio = require("socket.io");
 const { initializeDBConnection } = require("./config/db.config");
 const userRouter = require("./routers/user.router");
-const userMessage = require("./routers/message.router");
+const messageRouter = require("./routers/message.router");
+const messageRouter = require("./routers/group.router");
 const {
   createGroupMessage,
   createMessage,
@@ -30,25 +31,27 @@ app.get("/", (req, res) => {
 });
 
 app.use("/users", userRouter);
-app.use("/messages", authenticate, userMessage);
+app.use("/messages", authenticate, messageRouter);
+app.use("/groups", authenticate, groupRouter);
 
 app.use(routeHandler);
 app.use(errorHandler);
 
-let usersConnected = new Map();
+let connectedUsers = new Map();
+let groups = {};
 
 io.on("connection", (socket) => {
   socket.on("connectUser", ({ name }) => {
     //  When the client sends 'name', we store the 'name',
     //  'socket.client.id', and 'socket.id in a Map structure
 
-    usersConnected.set(name, [socket.client.id, socket.id]);
+    connectedUsers.set(name, [socket.client.id, socket.id]);
 
-    io.emit("onlineUsers", Array.from(usersConnected));
+    io.emit("onlineUsers", Array.from(connectedUsers));
   });
 
   socket.on("disconnect", ({ name }) => {
-    usersConnected.delete(name);
+    connectedUsers.delete(name);
   });
 
   socket.on("startMessage", ({ senderId, receiverEmail }) => {
@@ -58,10 +61,10 @@ io.on("connection", (socket) => {
   socket.on("sendMessage", ({ sender, receiver, message }) => {
     const { email, name } = receiver;
     let receiverSocketId =
-      usersConnected.get(name) === undefined
+      connectedUsers.get(name) === undefined
         ? false
-        : usersConnected.get(name)[1];
-    let senderSocketId = usersConnected.get(sender.name)[1];
+        : connectedUsers.get(name)[1];
+    let senderSocketId = connectedUsers.get(sender.name)[1];
     createMessage(sender._id, email, message).then(
       ({ info, isNewRecipient }) => {
         if (isNewRecipient && receiverSocketId) {
@@ -76,12 +79,17 @@ io.on("connection", (socket) => {
 
   socket.on("sendGroupMessage", ({ sender, group, message }) => {
     createGroupMessage(sender, group._id, message).then((res) => {
-      io.to(res.group.code).emit("groupMessage", res);
+      io.to(`${group.name}:${group.groupCode}`).emit("groupMessage", res);
     });
   });
 
   socket.on("joinGroup", ({ userInfo, group }) => {
-    socket.join(group);
+    socket.join(`${group.name}:${group.groupCode}`);
+    if (!groups[group]) {
+      groups[group] = [userInfo];
+    } else if (!groups[group].find((user) => user._id === userInfo._id)) {
+      groups[group].push(userInfo);
+    }
   });
 });
 
