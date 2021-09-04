@@ -85,7 +85,7 @@ const removeMember = async (req, res) => {
   }
 };
 
-const deleteGroup = (req, res) => {
+const deleteGroup = async (req, res) => {
   const { groupId } = req.params;
   const group = await Group.findById(groupId);
   if (group) {
@@ -105,7 +105,7 @@ const deleteGroup = (req, res) => {
   }
 };
 
-module.export = {
+module.exports = {
   fetchAllPublicGroups,
   createGroup,
   removeMember,
