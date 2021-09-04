@@ -7,7 +7,7 @@ const socketio = require("socket.io");
 const { initializeDBConnection } = require("./config/db.config");
 const userRouter = require("./routers/user.router");
 const messageRouter = require("./routers/message.router");
-const messageRouter = require("./routers/group.router");
+const groupRouter = require("./routers/group.router");
 const {
   createGroupMessage,
   createMessage,
