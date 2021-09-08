@@ -10,7 +10,7 @@ const createGroup = async (req, res) => {
     const newGroup = new Group({
       name: groupName,
       admin: adminId,
-      code: randomCode,
+      groupCode: randomCode(),
       isPublic: isPublic,
       description: description,
     });
