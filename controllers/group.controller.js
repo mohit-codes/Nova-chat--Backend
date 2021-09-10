@@ -37,21 +37,45 @@ const fetchAllPublicGroups = (req, res) => {
     });
 };
 
+const fetchMembers = async (req, res) => {
+  const { groupId } = req.params;
+  const group = await Group.findById(groupId);
+  if (group) {
+    const members = await User.find(
+      { _id: { $in: group.members } },
+      "_id name email"
+    );
+    return res.json({ status: true, members: members });
+  }
+  return res.json({ status: false, message: "Invalid group id" });
+};
 const addMember = async (req, res) => {
   const { memberEmail, groupId } = req.body;
   const user = await User.findOne({ email: memberEmail });
   if (user) {
     const group = await Group.findById(groupId);
     if (group) {
-      group.members.push(userId);
+      group.members.push(user._id);
       await group.save();
       user.groups.push(groupId);
       await user.save();
-      return res.json({ status: true, message: "added to group" });
+      return res.json({
+        status: true,
+        message: "added to group",
+        memberInfo: { name: user.name, id: user._id, email: user.email },
+      });
     }
-    return res.json({ status: false, message: "invalid group id" });
+    return res.json({
+      status: false,
+      message: "invalid group id",
+      memberInfo: null,
+    });
   }
-  return res.json({ status: false, message: "User not found" });
+  return res.json({
+    status: false,
+    message: "User not found",
+    memberInfo: null,
+  });
 };
 
 const updateGroup = async (req, res) => {
@@ -108,6 +132,7 @@ const deleteGroup = async (req, res) => {
 module.exports = {
   fetchAllPublicGroups,
   createGroup,
+  fetchMembers,
   removeMember,
   addMember,
   updateGroup,
