@@ -57,7 +57,7 @@ const createGroupMessage = async (senderId, groupId, message) => {
         receiver: {
           name: group.name,
           members: group.members,
-          code: group.code,
+          groupCode: group.groupCode,
           _id: group._id,
         },
         message: message,
@@ -172,13 +172,35 @@ const getMessages = (req, res) => {
   });
 };
 
+const deleteMessages = (senderId, receiverId) => {
+  Message.deleteMany({ sender: senderId, receiver: receiverId })
+    .then(() => {
+      const boolResult = Message.deleteMany({
+        receiver: senderId,
+        sender: receiverId,
+      })
+        .then(() => {
+          return true;
+        })
+        .catch((err) => {
+          console.log(err);
+          return false;
+        });
+      return boolResult;
+    })
+    .catch((err) => {
+      console.log(err);
+      return false;
+    });
+};
+
 // A mongoose query can be executed in one of two ways.
 // First, if you pass in a callback function, Mongoose will execute the query asynchronously and pass the
 // results to the callback.
 // A query also has a .then() function, and thus can be used as a promise.
 
 const getGroupMessages = (req, res) => {
-  const { userId, projectCode } = req.body;
+  const { userId, groupCode } = req.body;
   User.findOne({ _id: userId }, (err, user) => {
     if (err) {
       return res.json({ status: false, message: err.message });
@@ -186,7 +208,7 @@ const getGroupMessages = (req, res) => {
     if (!user) {
       return res.json({ status: false, message: "user not found" });
     }
-    Group.findOne({ code: projectCode }, (err, group) => {
+    Group.findOne({ code: groupCode }, (err, group) => {
       if (err) {
         return res.json({ status: false, message: err.message });
       }
@@ -215,6 +237,7 @@ module.exports = {
   getMessages,
   createGroupMessage,
   createMessage,
+  deleteMessages,
   getGroupMessages,
   startMessage,
 };

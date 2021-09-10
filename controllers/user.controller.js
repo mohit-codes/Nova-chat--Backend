@@ -3,6 +3,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const secret = process.env.JWT_SECRET;
 const Group = require("../models/group.model");
+const { deleteMessages } = require("./message.controller");
+
 const login = async (req, res) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email: email }).catch((err) => {
@@ -56,7 +58,7 @@ const signup = async (req, res) => {
       password: hashedPassword,
     });
 
-    const savedUser = newUser.save();
+    const savedUser = await newUser.save();
     const token = jwt.sign({ id: savedUser._id, name: savedUser.name }, secret);
 
     return res.json({
@@ -84,7 +86,7 @@ const findUser = async (req, res, next, userId) => {
     if (!user) {
       return res.status(400).json({ status: false, message: "User not found" });
     }
-    req.user = user;
+    req.userInfo = user;
     next();
   } catch (error) {
     return res.status(400).json({ status: false, message: error.message });
@@ -92,10 +94,10 @@ const findUser = async (req, res, next, userId) => {
 };
 
 const getById = (req, res) => {
-  const { user } = req;
+  const { userInfo } = req;
   return res
     .status(200)
-    .json({ status: true, user: user, message: "User found" });
+    .json({ status: true, user: userInfo, message: "User found" });
 };
 
 const getByEmail = async (req, res) => {
@@ -110,8 +112,8 @@ const getByEmail = async (req, res) => {
 };
 
 const deleteUser = (req, res) => {
-  const { user } = req;
-  user
+  const { userInfo } = req;
+  userInfo
     .delete()
     .then(() => {
       return res.json({ status: true, message: "user deleted" });
@@ -122,7 +124,7 @@ const deleteUser = (req, res) => {
 };
 
 const updateUserDetails = async (req, res) => {
-  let { user } = req;
+  let { userInfo } = req;
   const { update } = req.body;
   if (update._id) {
     return res.status(400).json({
@@ -130,8 +132,8 @@ const updateUserDetails = async (req, res) => {
       message: "Forbidden request, Id cannot be updated",
     });
   }
-  user = { ...user, ...updated };
-  user = await user.save();
+  userInfo = { ...userInfo, ...updated };
+  userInfo = await userInfo.save();
   return res.json({ status: true, message: "Details updated", user: user });
 };
 
@@ -162,17 +164,17 @@ const deleteSavedMessage = async (req, res) => {
 };
 
 const fetchGroupsByIds = async (req, res) => {
-  const { user } = req;
-  const data = await Group.find({ _id: { $in: user.groups } }).catch((err) =>
-    console.log(err)
+  const { userInfo } = req;
+  const data = await Group.find({ _id: { $in: userInfo.groups } }).catch(
+    (err) => console.log(err)
   );
   return res.status(200).json({ success: true, groups: data });
 };
 
 const fetchRecipientsByIds = async (req, res) => {
-  const { user } = req;
+  const { userInfo } = req;
   const data = await User.find(
-    { _id: { $in: user.chats } },
+    { _id: { $in: userInfo.chats } },
     "_id name email"
   ).catch((err) => console.log(err));
   return res.status(200).json({ success: true, recipients: data });
@@ -184,7 +186,8 @@ const deleteRecipient = async (req, res) => {
   const user = await User.findOne({ _id: senderId }).catch((err) => {
     return res.json({ status: false, message: err.message });
   });
-  if (user) {
+  const isMessagesDeleted = deleteMessages(senderId, recipientId);
+  if (user && isMessagesDeleted) {
     const index = user.chats.indexOf(recipientId);
     user.chats.splice(index, 1);
     await user.save();
