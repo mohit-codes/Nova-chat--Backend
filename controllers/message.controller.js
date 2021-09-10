@@ -57,7 +57,7 @@ const createGroupMessage = async (senderId, groupId, message) => {
         receiver: {
           name: group.name,
           members: group.members,
-          code: group.code,
+          groupCode: group.groupCode,
           _id: group._id,
         },
         message: message,
@@ -200,7 +200,7 @@ const deleteMessages = (senderId, receiverId) => {
 // A query also has a .then() function, and thus can be used as a promise.
 
 const getGroupMessages = (req, res) => {
-  const { userId, projectCode } = req.body;
+  const { userId, groupCode } = req.body;
   User.findOne({ _id: userId }, (err, user) => {
     if (err) {
       return res.json({ status: false, message: err.message });
@@ -208,7 +208,7 @@ const getGroupMessages = (req, res) => {
     if (!user) {
       return res.json({ status: false, message: "user not found" });
     }
-    Group.findOne({ code: projectCode }, (err, group) => {
+    Group.findOne({ code: groupCode }, (err, group) => {
       if (err) {
         return res.json({ status: false, message: err.message });
       }
