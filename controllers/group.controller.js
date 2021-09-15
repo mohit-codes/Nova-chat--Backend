@@ -14,6 +14,7 @@ const createGroup = async (req, res) => {
       isPublic: isPublic,
       description: description,
     });
+    newGroup.members.push(user._id);
     const groupInfo = await newGroup.save();
     user.groups.push(groupInfo._id);
     await user.save();
