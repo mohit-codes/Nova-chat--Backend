@@ -54,12 +54,6 @@ const createGroupMessage = async (senderId, groupId, message) => {
       await newMessage.save();
       info = {
         sender: { name: user.name, email: user.email, _id: user._id },
-        receiver: {
-          name: group.name,
-          members: group.members,
-          groupCode: group.groupCode,
-          _id: group._id,
-        },
         message: message,
         createdAt: message.createdAt,
         messageId: newMessage._id,
@@ -200,7 +194,7 @@ const deleteMessages = (senderId, receiverId) => {
 // A query also has a .then() function, and thus can be used as a promise.
 
 const getGroupMessages = (req, res) => {
-  const { userId, groupCode } = req.body;
+  const { userId, groupId } = req.body;
   User.findOne({ _id: userId }, (err, user) => {
     if (err) {
       return res.json({ status: false, message: err.message });
@@ -208,7 +202,7 @@ const getGroupMessages = (req, res) => {
     if (!user) {
       return res.json({ status: false, message: "user not found" });
     }
-    Group.findOne({ code: groupCode }, (err, group) => {
+    Group.findById(groupId, (err, group) => {
       if (err) {
         return res.json({ status: false, message: err.message });
       }
@@ -216,15 +210,29 @@ const getGroupMessages = (req, res) => {
         return res.json({ status: false, message: "group not found" });
       }
       Message.find({ receiver: group._id })
-        .then((messages) => {
-          // let result = [];
-          // // Now, for each msg find out the sender
-          // messages.forEach((msg) => {
-          //   if(msg.sender !== user._id){
-          //     const user = await User.findOne({_id})
-          //   }
-          // });
-          return res.json({ status: true, messages: messages });
+        .then(async (messages) => {
+          // Now, for each msg find out the sender
+          let result = [];
+          for (const msg of messages) {
+            if (String(msg.sender) !== String(user._id)) {
+              // if the sender is not the current reuqest client
+              const _user = await User.findById(msg.sender);
+              result.push({
+                sender: { id: _user._id, name: _user.name },
+                message: msg.message,
+                createdAt: msg.createdAt,
+                messageId: msg._id,
+              });
+            } else {
+              result.push({
+                sender: { id: user._id, name: user.name },
+                message: msg.message,
+                createdAt: msg.createdAt,
+                messageId: msg._id,
+              });
+            }
+          }
+          return res.json({ status: true, messages: result });
         })
         .catch((err) => {
           return res.json({ status: false, message: err.message });
