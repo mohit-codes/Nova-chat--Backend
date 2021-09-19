@@ -85,10 +85,10 @@ io.on("connection", (socket) => {
 
   socket.on("joinGroup", ({ userInfo, group }) => {
     socket.join(`${group.name}:${group.groupCode}`);
-    if (!groups[group]) {
-      groups[group] = [userInfo];
-    } else if (!groups[group].find((user) => user._id === userInfo._id)) {
-      groups[group].push(userInfo);
+    if (!groups[group.name]) {
+      groups[group.name] = [userInfo];
+    } else if (!groups[group.name].find((user) => user._id === userInfo._id)) {
+      groups[group.name].push(userInfo);
     }
   });
 });
