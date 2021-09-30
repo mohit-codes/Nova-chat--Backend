@@ -13,6 +13,7 @@ const {
   createMessage,
   startMessage,
 } = require("./controllers/message.controller");
+const { saveMessage } = require("./controllers/user.controller");
 const authenticate = require("./middleware/authenticate");
 const errorHandler = require("./middleware/errorHandler");
 const routeHandler = require("./middleware/routeHandler");
@@ -41,17 +42,23 @@ let connectedUsers = new Map();
 let groups = {};
 
 io.on("connection", (socket) => {
+  let { id } = socket.client;
+
   socket.on("connectUser", ({ name }) => {
     //  When the client sends 'name', we store the 'name',
     //  'socket.client.id', and 'socket.id in a Map structure
-
     connectedUsers.set(name, [socket.client.id, socket.id]);
-
-    io.emit("onlineUsers", Array.from(connectedUsers));
+    io.emit("onlineUsers", Array.from(connectedUsers.keys()));
   });
 
-  socket.on("disconnect", ({ name }) => {
-    connectedUsers.delete(name);
+  socket.on("disconnect", () => {
+    for (let key of connectedUsers.keys()) {
+      if (connectedUsers.get(key)[0] === id) {
+        connectedUsers.delete(key);
+        break;
+      }
+    }
+    io.emit("onlineUsers", Array.from(connectedUsers.keys()));
   });
 
   socket.on("startMessage", ({ senderId, receiverEmail }) => {
@@ -75,6 +82,13 @@ io.on("connection", (socket) => {
         io.to(senderSocketId).emit("message", info);
       }
     );
+  });
+
+  socket.on("saveMessage", ({ user, message }) => {
+    let userSocketId = connectedUsers.get(user.name)[1];
+    saveMessage(user._id, message).then((res) => {
+      io.to(userSocketId).emit("savedMessage", res);
+    });
   });
 
   socket.on("sendGroupMessage", ({ sender, group, message }) => {
