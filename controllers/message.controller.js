@@ -166,6 +166,18 @@ const getMessages = (req, res) => {
   });
 };
 
+const deleteMessageById = (req, res) => {
+  const { messageId } = req.params;
+  Message.findByIdAndDelete(messageId)
+    .then(() => {
+      return res.json({ status: true, message: "message deleted" });
+    })
+    .catch((err) => {
+      console.log(err);
+      return res.json({ status: false, message: err.message });
+    });
+};
+
 const deleteMessages = (senderId, receiverId) => {
   Message.deleteMany({ sender: senderId, receiver: receiverId })
     .then(() => {
@@ -246,6 +258,7 @@ module.exports = {
   createGroupMessage,
   createMessage,
   deleteMessages,
+  deleteMessageById,
   getGroupMessages,
   startMessage,
 };

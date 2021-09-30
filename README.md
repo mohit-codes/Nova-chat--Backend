@@ -11,6 +11,9 @@ Backend using ExpressJS with Socket io connected to MongoDB through Mongoose
 - "sendMessage" listener - take sender object, receiver object and message
   -  emit "newRecipient" event with message info if receiver is not present already in sender's chat list.
   -  else emit message info to receiver and sender by event "message".
+- "sendGroupMessage" listener - take sender, group and message
+  - emit "groupMessage" event into room associated with the group.
+- "joinGroup" listener - take userInfo and group to join user client socket into the room associated to group.
   
 ### Users
 
@@ -30,39 +33,13 @@ Backend using ExpressJS with Socket io connected to MongoDB through Mongoose
 ### Message
 
 - POST /messages/get_messages - Takes senderId and receiverId to fetch and return all messages.
-
-<!-- - POST /messages/join - Join project using project code and userId.
-- PUT /messages/:projectId - Update details of project(except id and refs).
-- DELETE /messages/:projectId - delete project.
-- GET /messages/boards/:projectId - fetch all boards of the project.
-- POST /projects/removeMember/:projectId - remove team member by memberId.
-- GET /projects/:userId - fetch all projects of single user. -->
-<!-- ### Boards
-
-- POST /boards/create - Takes title and userId to add new board and returns boardId.
-- GET /boards/:boardId - Fetch the details of single board.
-- PUT /boards/:boardId - Update details of board (except id and ref).
-- DELETE /boards/:boardId - delete board.
-- GET /boards/lists/:boardId - fetch all lists of single board.
-- GET /boards/:userId - fetch all boards of single user.
-
-### Lists
-
-- POST /lists/create - Takes title and boardId to add new list and returns listId.
-- GET /lists/:listId - Fetch the details of single list.
-- PUT /lists/:listId - Update details of list (except id and board ref).
-- DELETE /lists/:listId - delete list.
-- GET /lists/cards/:listId - fetch all cards of single list.
-
-### Cards
-
-- POST /cards/create - Takes title and listId to add new card and returns cardId (description is optional in request).
-- PUT /cards/:cardId - Update details of card (except id and list ref).
-- DELETE /cards/:cardId - delete card.
-- GET cards/comments/:cardId - fetch all comments of single card.
-
-### Comment
-
-- POST /comments/create - Takes content, author and cardId to add new comment and returns commentId
-- PUT /comments/:commentId - Update comment.
-- DELETE /comments/:commentId - delete comment.  -->
+- POST /messages/get_group_messages - Takes userId and groupId to fetch and return all messages.
+- DELETE /messages/:messageId - delete message.
+  
+### Group
+- GET /groups/members/:groupId - fetch group members.
+- POST /groups/create - Providing (adminId : string), (groupName : string), (isPublic : bool), (description : string) would add a new group into the database.
+- POST /groups/add_member - Takes email and groupId to add member to group.
+- PUT /groups/update_group - Takes groupId, name, description, isPublic to update Group info.
+- POST /groups/remove_member - Takes memberId and groupId to remove the member from group.
+- DELETE /groups/:groupId" - deletes the group.

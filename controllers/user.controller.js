@@ -1,4 +1,5 @@
 const User = require("../models/user.model");
+const SavedMessage = require("../models/savedMessage.model");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const secret = process.env.JWT_SECRET;
@@ -137,17 +138,29 @@ const updateUserDetails = async (req, res) => {
   return res.json({ status: true, message: "Details updated", user: user });
 };
 
-const saveMessage = async (req, res) => {
-  const { userId, message } = req.body;
-
-  const user = await User.findOne({ _id: userId }).catch((err) => {
-    return res.json({ status: false, message: err.message });
+const saveMessage = async (userId, message) => {
+  const user = await User.findOne({ _id: userId });
+  const newSavedMessage = new SavedMessage({
+    owner: user._id,
+    message: message,
   });
-  if (user) {
-    user.savedMessages.push(message);
-    await user.save();
-    return res.json({ status: true });
-  }
+  const newMessage = await newSavedMessage.save();
+  user.savedMessages.push(newMessage._id);
+  await user.save();
+  let info = {
+    message: newMessage.message,
+    createdAt: newMessage.createdAt,
+    messageId: newMessage._id,
+  };
+  return info;
+};
+
+const fetchSavedMessages = async (req, res) => {
+  const { userInfo } = req;
+  const data = await SavedMessage.find({
+    _id: { $in: userInfo.savedMessages },
+  }).catch((err) => console.log(err));
+  return res.status(200).json({ success: true, savedMessages: data });
 };
 
 const deleteSavedMessage = async (req, res) => {
@@ -207,6 +220,7 @@ module.exports = {
   saveMessage,
   deleteRecipient,
   deleteSavedMessage,
+  fetchSavedMessages,
   fetchGroupsByIds,
   fetchRecipientsByIds,
 };
