@@ -8,6 +8,15 @@ const savedMessageSchema = new mongoose.Schema(
     },
     message: {
       type: String,
+      required: true,
+    },
+    iv: {
+      type: String,
+      required: true,
+    },
+    key: {
+      type: String,
+      required: true,
     },
   },
   { timestamps: true }
