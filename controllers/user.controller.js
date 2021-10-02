@@ -4,7 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const secret = process.env.JWT_SECRET;
 const Group = require("../models/group.model");
-const { deleteMessages } = require("./message.controller");
+const { deleteMessages, encrypt } = require("./message.controller");
 
 const login = async (req, res) => {
   const { email, password } = req.body;
@@ -140,14 +140,19 @@ const updateUserDetails = async (req, res) => {
 
 const saveMessage = async (userId, message) => {
   const user = await User.findOne({ _id: userId });
+  const encryptedMessage = encrypt(message);
   const newSavedMessage = new SavedMessage({
     owner: user._id,
-    message: message,
+    message: encryptedMessage.encryptedMessage,
+    iv: encryptedMessage.iv,
+    key: encryptedMessage.key,
   });
   const newMessage = await newSavedMessage.save();
   user.savedMessages.push(newMessage._id);
   await user.save();
   let info = {
+    iv: newMessage.iv,
+    key: newMessage.key,
     message: newMessage.message,
     createdAt: newMessage.createdAt,
     messageId: newMessage._id,
@@ -160,16 +165,27 @@ const fetchSavedMessages = async (req, res) => {
   const data = await SavedMessage.find({
     _id: { $in: userInfo.savedMessages },
   }).catch((err) => console.log(err));
-  return res.status(200).json({ success: true, savedMessages: data });
+  let result = [];
+  for (const msg of data) {
+    result.push({
+      iv: msg.iv,
+      key: msg.key,
+      message: msg.message,
+      createdAt: msg.createdAt,
+      messageId: msg._id,
+    });
+  }
+  return res.status(200).json({ success: true, savedMessages: result });
 };
 
 const deleteSavedMessage = async (req, res) => {
-  const { userId, message } = req.body;
+  const { userId, messageId } = req.body;
   const user = await User.findOne({ _id: userId }).catch((err) => {
     return res.json({ status: false, message: err.message });
   });
+  await SavedMessage.findByIdAndDelete(messageId);
   if (user) {
-    const index = user.savedMessages.indexOf(message);
+    const index = user.savedMessages.indexOf(messageId);
     user.savedMessages.splice(index, 1);
     await user.save();
     return res.json({ status: true });
