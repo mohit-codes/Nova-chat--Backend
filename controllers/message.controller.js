@@ -1,6 +1,24 @@
 const Group = require("../models/group.model");
 const Message = require("../models/message.model");
 const User = require("../models/user.model");
+const crypto = require("crypto");
+
+const encrypt = (message) => {
+  // key to encrypt and decrypted  (random 32 Bytes)
+  const key = crypto.randomBytes(32);
+  //iv - initialization vector (random 16 Bytes)
+  const iv = crypto.randomBytes(16);
+  // cipher function to encrypt the message
+  // aes-256-cbc algorithm to encrypt and decrypt the data.
+  let cipher = crypto.createCipheriv("aes-256-cbc", Buffer.from(key), iv);
+  let encryptedMessage = cipher.update(message);
+  encryptedMessage = Buffer.concat([encryptedMessage, cipher.final()]);
+  return {
+    iv: iv.toString("hex"),
+    encryptedMessage: encryptedMessage.toString("hex"),
+    key: key.toString("hex"),
+  };
+};
 
 const createMessage = async (senderId, receiverEmail, message) => {
   let info = null;
@@ -16,10 +34,13 @@ const createMessage = async (senderId, receiverEmail, message) => {
         receiver.chats.push(senderId);
         await receiver.save();
       }
+      const encryptedMessage = encrypt(message);
       const newMessage = new Message({
         sender: senderId,
         receiver: receiver._id,
-        message: message,
+        message: encryptedMessage.encryptedMessage,
+        iv: encryptedMessage.iv,
+        key: encryptedMessage.key,
       });
       await newMessage.save();
       info = {
@@ -29,7 +50,9 @@ const createMessage = async (senderId, receiverEmail, message) => {
           _id: receiver._id,
           email: receiver.email,
         },
-        message: message,
+        iv: newMessage.iv,
+        key: newMessage.key,
+        message: newMessage.message,
         createdAt: message.createdAt,
         messageId: newMessage._id,
       };
@@ -46,15 +69,20 @@ const createGroupMessage = async (senderId, groupId, message) => {
   if (user) {
     const group = await Group.findOne({ _id: groupId });
     if (group) {
+      const encryptedMessage = encrypt(message);
       const newMessage = new Message({
         sender: senderId,
         receiver: group._id,
-        message: message,
+        message: encryptedMessage.encryptedMessage,
+        iv: encryptedMessage.iv,
+        key: encryptedMessage.key,
       });
       await newMessage.save();
       info = {
         sender: { name: user.name, email: user.email, _id: user._id },
-        message: message,
+        iv: newMessage.iv,
+        key: newMessage.key,
+        message: newMessage.message,
         createdAt: message.createdAt,
         messageId: newMessage._id,
       };
@@ -129,6 +157,8 @@ const getMessages = (req, res) => {
                           email: receiver.email,
                           id: receiver._id,
                         },
+                        iv: message.iv,
+                        key: message.key,
                         message: message.message,
                         createdAt: message.createdAt,
                         messageId: message._id,
@@ -145,6 +175,8 @@ const getMessages = (req, res) => {
                           email: receiver.email,
                           id: receiver._id,
                         },
+                        iv: message.iv,
+                        key: message.key,
                         createdAt: message.createdAt,
                         message: message.message,
                         messageId: message._id,
@@ -227,10 +259,12 @@ const getGroupMessages = (req, res) => {
           let result = [];
           for (const msg of messages) {
             if (String(msg.sender) !== String(user._id)) {
-              // if the sender is not the current reuqest client
+              // if the sender is not the current request client
               const _user = await User.findById(msg.sender);
               result.push({
                 sender: { id: _user._id, name: _user.name },
+                iv: msg.iv,
+                key: msg.key,
                 message: msg.message,
                 createdAt: msg.createdAt,
                 messageId: msg._id,
@@ -238,6 +272,8 @@ const getGroupMessages = (req, res) => {
             } else {
               result.push({
                 sender: { id: user._id, name: user.name },
+                iv: msg.iv,
+                key: msg.key,
                 message: msg.message,
                 createdAt: msg.createdAt,
                 messageId: msg._id,
@@ -261,4 +297,5 @@ module.exports = {
   deleteMessageById,
   getGroupMessages,
   startMessage,
+  encrypt,
 };

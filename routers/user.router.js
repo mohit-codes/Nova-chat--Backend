@@ -10,7 +10,6 @@ const {
   deleteUser,
   deleteRecipient,
   deleteSavedMessage,
-  saveMessage,
   fetchGroupsByIds,
   fetchRecipientsByIds,
   fetchSavedMessages,

@@ -1,3 +1,5 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/mohit-codes/nova-chat--backend/badge/main)](https://www.codefactor.io/repository/github/mohit-codes/nova-chat--backend/overview/main)
+
 # Nova Chat Backend  
 
 Backend using ExpressJS with Socket io connected to MongoDB through Mongoose
@@ -11,6 +13,8 @@ Backend using ExpressJS with Socket io connected to MongoDB through Mongoose
 - "sendMessage" listener - take sender object, receiver object and message
   -  emit "newRecipient" event with message info if receiver is not present already in sender's chat list.
   -  else emit message info to receiver and sender by event "message".
+- "saveMessage" listener - take user and message to save it.
+  - emit message info to user by "savedMessage" event.
 - "sendGroupMessage" listener - take sender, group and message
   - emit "groupMessage" event into room associated with the group.
 - "joinGroup" listener - take userInfo and group to join user client socket into the room associated to group.
@@ -21,8 +25,8 @@ Backend using ExpressJS with Socket io connected to MongoDB through Mongoose
 - POST /users/signup - Providing name, password, and unique email would add a new user into the database.
 - PUT  /users/update/:userId - Update details of user (except id).
 - DELETE /users/:userId - delete user.
-- GET  /get_by_Id/:userId  - get single user by id.
-- POST /users/saveMessage - take userId and message to save it.
+- GET  /users/get_by_Id/:userId  - fetch single user by id.
+- GET /users/savedMessages/:userId - fetch saved messages.
 - DELETE /users/delete_saved_message  - take userId and message to delete it from Saved Messages.
 - GET /users/get_by_Id/:userId - return user object.
 - GET /users/recipients/:userId - fetch Recipients by userId
