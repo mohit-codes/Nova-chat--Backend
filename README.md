@@ -1,3 +1,5 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/mohit-codes/nova-chat--backend/badge/main)](https://www.codefactor.io/repository/github/mohit-codes/nova-chat--backend/overview/main)
+
 # Nova Chat Backend  
 
 Backend using ExpressJS with Socket io connected to MongoDB through Mongoose
