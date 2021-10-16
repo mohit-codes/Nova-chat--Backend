@@ -126,16 +126,17 @@ const deleteUser = (req, res) => {
 
 const updateUserDetails = async (req, res) => {
   let { userInfo } = req;
-  const { update } = req.body;
+  userInfo = await User.findById(userInfo._id);
+  const update = req.body;
   if (update._id) {
     return res.status(400).json({
       status: false,
       message: "Forbidden request, Id cannot be updated",
     });
   }
-  userInfo = { ...userInfo, ...updated };
+  userInfo.name = update.name;
   userInfo = await userInfo.save();
-  return res.json({ status: true, message: "Details updated", user: user });
+  return res.json({ status: true, message: "Details updated" });
 };
 
 const saveMessage = async (userId, message) => {
