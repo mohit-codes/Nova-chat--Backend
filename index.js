@@ -17,12 +17,13 @@ const { saveMessage } = require("./controllers/user.controller");
 const authenticate = require("./middleware/authenticate");
 const errorHandler = require("./middleware/errorHandler");
 const routeHandler = require("./middleware/routeHandler");
+const { ALLOWED_ORIGINS } = require("./utils/constants.js");
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: ALLOWED_ORIGINS }));
 const server = http.createServer(app);
-const io = socketio(server, { cors: true });
+const io = socketio(server, { cors: { origin: ALLOWED_ORIGINS } });
 
 // called before any route
 initializeDBConnection();
