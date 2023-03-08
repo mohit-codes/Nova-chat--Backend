@@ -17,10 +17,11 @@ const { saveMessage } = require("./controllers/user.controller");
 const authenticate = require("./middleware/authenticate");
 const errorHandler = require("./middleware/errorHandler");
 const routeHandler = require("./middleware/routeHandler");
+const corsOptions = require("./utils");
 
 const app = express();
 app.use(express.json());
-app.use(cors());
+app.use(cors(corsOptions));
 const server = http.createServer(app);
 const io = socketio(server, { cors: true });
 
